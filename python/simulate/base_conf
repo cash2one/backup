@@ -1,0 +1,14 @@
+[main]
+date_str = 20141118
+pbias_filepath = position_bias.dat
+reserve_price_filepath = query_cluster.dat
+disgsp_v_ratio = 0.85
+disgsp_pp_t = 0.65
+disgsp_ppim_t = 1.0
+
+[switch]
+use_ubmq = 1
+divideq = 1
+reserve_price_middle = 0
+reserve_price_ratio_index = 0
+reserve_price_online = 1

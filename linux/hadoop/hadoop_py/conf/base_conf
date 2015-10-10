@@ -1,0 +1,34 @@
+[hadoop]
+HADOOP_CLIENT_MULAN = /home/users/luoruiyang/backup/hadoop-client/nmgoff/hadoop/bin/hadoop
+HADOOP_CLIENT_KHAN = /home/users/luoruiyang/backup/hadoop-client/hadoop-client-kehan/hadoop/bin/hadoop
+HADOOP = mulan
+DATA_TO_LOCAL = 10000
+TIME_SEQ = 20141111
+CLEAR_LOCAL_DATA = 10001
+ALERT_PHONE = 15801689885
+
+[job_conf]
+JOB_NAME = DCEON_default_name
+JOB_MAP_CAP = 1000
+JOB_REDUCE_CAP = 800
+JOB_MAP_TASKS = 1000
+JOB_REDUCE_TASKS = 800
+JOB_PRIORITY = NORMAL
+JOB_MAX_SPLIT_SIZE = 512000000
+JOB_MEM_LIMIT = 4000
+STREAM_MEM_LIMIT = 4000
+JOB_PARTITIONER = org.apache.hadoop.mapred.lib.KeyFieldBasedPartitioner
+JOB_INPUTFORMAT = org.apache.hadoop.mapred.CombineTextInputFormat
+JOB_INPUT = /app/ecom/fcr-ad/luoruiyang/hadoop_job/input/
+JOB_OUTPUT = /app/ecom/fcr-ad/luoruiyang/hadoop_job/output/
+JOB_PY_CACHE_ARCHIVE = /share/python2.7.tar.gz#python2.7
+JOB_PY_ENV = export LD_LIBRARY_PATH=python2.7/lib/ && python2.7/bin/python
+JOB_MAPPER = mapper.py -m
+JOB_REDUCER = mapper.py -r
+JOB_INPUT_JOIN = 10001
+JOB_SECOND_SORT = 10001
+JOB_KEY_FIELDS = 2
+JOB_KEY_PARTITION = 1
+JOB_OUTPUT_PREFIX_MULAN = /app/ecom/fcr-ad/
+JOB_OUTPUT_PREFIX_KHAN = /app/ecom/fcr/
+JOB_USERNAME = luoruiyang
