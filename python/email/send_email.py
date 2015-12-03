@@ -16,9 +16,9 @@ except Exception as info:
 
 
 class SendMailToLists(object):
-    MAIL_SERVER = "mail2-in.baidu.com"
+    MAIL_SERVER = "email.baijiahulian.com"
     MESSAGE_ENCODE = "utf-8"
-    FROM_ADDR = "auto@baidu.com"
+    FROM_ADDR = "auto@baijiahulian.com"
 
     def __init__(self, data = {}):
         self.data = data
@@ -80,11 +80,13 @@ class SendMailToLists(object):
             self.sms(str(info.message).replace(" ", "_"))
 
     def sms(self, msg, phone = "15801689885"):
+        print msg
+        return
         cmd = "gsmsend -s emp01.baidu.com:15003 -s emp02.baidu.com:15003 %s@%s" % (phone, msg)
         os.system(cmd)
 
 if __name__ == "__main__":
-    data = {"Cc" : ["luoruiyang@baidu.com"],\
+    data = {"Cc" : ["luoruiyang@baijiahulian.com"],\
             "To" : ["jiangzhen01@baidu.com"],\
             "Subject" : "test cc",\
             "Body" : "test, hello world!!!"}
