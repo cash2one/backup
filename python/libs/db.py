@@ -16,7 +16,7 @@ class DbConfReader(object):
     def __init__(self, conf):
         self.conf = base_conf.base_conf_t([conf])
         self.gen_sql()
-        
+
     def gen_sql(self):
         self.table_name = self.conf.name
         self.colums = [x.strip() for x in self.conf.colums.split(",")]
@@ -29,17 +29,17 @@ class DbConfReader(object):
             self.key = {x.strip() : True for x in self.conf.key.split(",")}
         except Exception as info:
             self.key = {}
-            
+
         self.create_sql = self.gen_create_sql()
         self.update_sql = self.gen_update_sql()
         self.insert_sql = self.gen_insert_sql()
-        
+
     def gen_update_sql(self, condition = "day", key = "is_del", value = 1):
         update_sql = '''UPDATE `%s` SET `%s` = "%s" WHERE `%s` = "%s"'''\
                      % (self.table_name, key, value, condition, "%s")
         self.update_sql = update_sql
         return update_sql
-        
+
     def gen_insert_sql(self):
         ret = "INSERT INTO `%s` (" % self.table_name
         ret += ",".join(["`" + col + "`" for col in self.insert_colums])
@@ -48,7 +48,7 @@ class DbConfReader(object):
         ret += ",".join(format)
         ret += ") "
         return ret
-    
+
     def gen_create_sql(self):
         ret = "CREATE TABLE IF NOT EXISTS `%s` (" % self.table_name
         ret += ",".join(["`" + col + "` " + self.conf[col] for col in self.colums])
@@ -56,26 +56,28 @@ class DbConfReader(object):
             ret += ", KEY `%s` (`%s`)" % (key, key)
         ret += ") ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COMMENT='%s'" % self.table_name
         return ret
-        
+
     def create(self):
         return self.create_sql
-    
+
     def insert(self, values):
         sql = self.insert_sql % tuple(tools.convert_values(values))
         return sql
-    
+
     def update(self, date):
         return self.update_sql % date
-     
+
 class DbBase(object):
-    
+
     def __init__(self,
                  host = "",
                  user = "",
                  passwd = "",
                  db = "",
                  port = 3306,
+                 charset = "utf8",
                  logger = None,
+                 dict_cursor = False
                  ):
         self.host = host
         self.user = user
@@ -85,8 +87,10 @@ class DbBase(object):
         self.conn = None
         self.cursor = None
         self.logger = logger
+        self.dict_cursor = dict_cursor
+        self.charset = charset
         self.table_create = False
-    
+
     def connect(self):
         try:
             self.conn = MySQLdb.connect(
@@ -95,60 +99,74 @@ class DbBase(object):
                                 passwd = self.passwd,
                                 db = self.db,
                                 port = self.port,
-                                charset = "utf8"
+                                charset = self.charset
                                 )
-            self.cursor = self.conn.cursor()
-            
+            if self.dict_cursor:
+                self.cursor = self.conn.cursor(MySQLdb.cursors.DictCursor)
+            else:
+                self.cursor = self.conn.cursor()
+
         except Exception as info:
-            print info
+            print "db->connect", info
             sys.exit(-1)
-            
+
     def close(self):
         self.conn.close()
-    
+
+    def reconnect(self):
+        try:
+            self.conn.ping()
+        except:
+            self.connect()
+
     def execute(self, sql, print_sql = True, commit = False):
         if print_sql:
             if self.logger is not None:
                 self.logger("sql = [%s]" % sql)
             else:
                 print sql
+        self.reconnect()
         self.info = self.cursor.execute(sql)
-        
+
         if commit:
             self.commit()
-        
+
     def info(self):
         return self.info
-    
+
     def commit(self):
         self.conn.commit()
-    
+
     def next(self):
         return self.cursor.fetchone()
-    
+
+    def page(self, page, offset):
+        pass
+
     def next_all(self):
         return self.cursor.fetchall()
 
 class Redis(object):
-    
+
     def __init__(self, host, passwd, port, db):
         self.r = redis.Redis(host = host,
                              password = passwd,
                              port = port,
                              db = db)
-    
+
     def hget(self, key, field):
         return self.r.hget(key, field)
-    
+
     def hgetall(self, key):
         return self.r.hgetall(key)
 
-def get_db_ins(connect_conf):
+def get_db_ins(connect_conf, dict_cursor = False):
     db_instance = DbBase(host = connect_conf.db_host,
                             user = connect_conf.db_user,
                             passwd = connect_conf.db_pass,
                             port = int(connect_conf.db_port),
                             db = connect_conf.db_name,
+                            dict_cursor = dict_cursor
                             )
     db_instance.connect()
     return db_instance

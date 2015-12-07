@@ -14,14 +14,20 @@ except Exception as info:
     print info
     sys.exit()
 import tools
-file_logger = tools.get_logger("./logs/send.email")
+file_logger = tools.logger("./logs/send.email")
 
 class SendMailToLists(object):
     MESSAGE_ENCODE = "utf-8"
     FROM_ADDR = "postmaster@baijiahulian.com"
-    MAIL_SERVER = "121.52.212.26"  # 设置服务器
+    MAIL_SERVER = "smtpproxy.baijiahulian.com"  # 设置服务器
     MAIL_PORT = 25
+    MAIL_USER = "postmaster"
     MAIL_PASS = "bjhl123456"  # 口令
+
+    MAIL_SERVER_BAK = "smtp.126.com"
+    MAIL_USER_BAK = "icygaara"
+    MAIL_FROM_BAK = "icygaara@126.com"
+    MAIL_PASS_BAK = "icygaaratbs"
 
     def __init__(self, data = {}, logger = None):
         self.data = data
@@ -30,6 +36,10 @@ class SendMailToLists(object):
         if not self.logger:
             self.logger = file_logger
 
+    def set_data(self, data):
+        self.data = data
+        return self
+
     def make_msg(self):
         if "To" not in self.data or "Body" not in self.data:
             self.logger.fatal("To and Body must be set")
@@ -37,7 +47,7 @@ class SendMailToLists(object):
 
         try:
             self.MSG = MIMEMultipart()
-            self.MSG["From"] = self.data.get("From", self.FROM_ADDR)
+            # self.MSG["From"] = self.data.get("From", self.FROM_ADDR)
             self.MSG["To"] = ";".join(self.data["To"])
             self.MSG["Subject"] = self.data.get("Subject", "Default Subject")
             self.MSG["Cc"] = ";".join(self.data.get("Cc", []))
@@ -49,7 +59,7 @@ class SendMailToLists(object):
                 self.add_attach()
 
         except Exception as info:
-            self.sms(str(info.message).replace(" ", "_"))
+            # self.sms(str(info.message).replace(" ", "_"))
             self.MSG = None
         return self
 
@@ -71,19 +81,29 @@ class SendMailToLists(object):
 
     def send(self):
         if not self.MSG:
-            print "run make_msg before send"
+            self.logger.fatal("run make_msg before send")
             sys.exit()
         try:
             smtp = smtplib.SMTP()
-            code, server_msg = smtp.connect(self.MAIL_SERVER, port = self.MAIL_PORT)
+            try:
+
+                code, server_msg = smtp.connect(self.MAIL_SERVER, port = self.MAIL_PORT)
+                self.MSG["From"] = self.data.get("From", self.FROM_ADDR)
+                # smtp.login(self.MAIL_USER, self.MAIL_PASS)  #登陆服务器
+            except Exception as info:
+                self.logger.warn("User Bak connect.")
+                code, server_msg = smtp.connect(self.MAIL_SERVER_BAK)
+                smtp.login(self.MAIL_USER_BAK, self.MAIL_PASS_BAK)
+                self.MSG["From"] = self.MAIL_FROM_BAK
+
             self.data["To"].extend(self.data.get("Cc", []))
             self.data["To"].extend(self.data.get("Bcc", []))
-            print "send to", self.data["To"]
-            smtp.sendmail(self.FROM_ADDR, self.data["To"], self.MSG.as_string())
+            self.logger.info("send to " + str(self.data["To"]))
+            smtp.sendmail(self.MSG["From"], self.data["To"], self.MSG.as_string())
             smtp.quit()
-            print "send success"
+            self.logger.info("send success")
         except Exception as info:
-            print info
+            self.logger.fatal("send_email->send [%s]" % info)
             # self.sms(str(info.message).replace(" ", "_"))
 
     def sms(self, msg, phone = "15801689885"):
@@ -96,7 +116,8 @@ if __name__ == "__main__":
     data = {
             "To" : ["luoruiyang@baijiahulian.com"],\
             "Subject" : "test cc",\
-            "Body" : "test, hello world!!!"}
+            "Body" : "test, hello world!!!",
+            "attach": [("sheet_1.xls", "用户数据.xls")]}
     # Usage
     SMTL = SendMailToLists(data)
     SMTL.make_msg()\

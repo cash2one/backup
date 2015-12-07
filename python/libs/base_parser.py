@@ -40,5 +40,3 @@ class base_parser_t(object):
 
 if __name__ == "__main__":
     pass
-
-
