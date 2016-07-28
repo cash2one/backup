@@ -1,0 +1,52 @@
+Host *
+ControlMaster auto
+ControlPath ~/.ssh/master-%r@%h:%p
+ControlPersist yes
+
+Host find02 find01 log01 logrd match01 match02 cron jiakailog test
+ForwardAgent yes
+ProxyCommand ssh -i /Users/luoruiyang/work/login/luoruiyang.pem luoruiyang@login.baijiahulian.com -W %h:%p
+
+Host find02
+User worker
+HostName 172.16.1.19
+
+Host find01
+User worker
+HostName 172.16.1.18
+
+Host match01
+User worker
+HostName 172.16.1.39
+
+Host test
+User worker
+HostName 172.21.134.7
+
+Host match02
+User worker
+HostName 172.16.1.40
+
+Host cron
+User worker
+HostName 172.16.1.35
+
+Host log01
+User luoruiyang
+HostName 172.16.1.10
+
+Host jiakailog
+User jiakai
+HostName 172.16.1.10
+
+Host logrd
+User rd
+HostName 172.16.1.10
+
+Host luo
+User root
+HostName 101.200.143.46
+
+Host luoer
+User luoruiyang
+HostName 101.200.143.46
